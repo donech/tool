@@ -1,0 +1,8 @@
+\#*
+.\#*
+!.gitignore
+vendor
+*.DS_Store
+.idea
+go.sum
+xlog/test.log
