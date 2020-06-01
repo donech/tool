@@ -6,3 +6,5 @@ vendor
 .idea
 go.sum
 xlog/test.log
+xdb/test.log
+
