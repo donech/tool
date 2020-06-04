@@ -3,6 +3,7 @@ package xdb
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"go.uber.org/zap"
@@ -12,6 +13,10 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 )
+
+var CreatedFiledName = "created_time"
+var UpdatedFiledName = "updated_time"
+var DeletedFiledName = "deleted_time"
 
 //Open the database connection
 func Open(conf Config) (*gorm.DB, func()) {
@@ -50,18 +55,99 @@ func RegisterCallback(db *gorm.DB) {
 	db.Callback().Query().Register("logger", func(scope *gorm.Scope) {
 		log("query", scope)
 	})
-	db.Callback().RowQuery().Register("logger", func(scope *gorm.Scope) {
+	db.Callback().RowQuery().After("gorm:row_query").Register("logger", func(scope *gorm.Scope) {
 		log("raw_query", scope)
 	})
+	db.Callback().Create().Replace("gorm:update_time_stamp", updateTimeStampForCreateCallback)
+	db.Callback().Update().Replace("gorm:update_time_stamp", updateTimeStampForUpdateCallback)
+	db.Callback().Delete().Replace("gorm:delete", deleteCallback)
 }
 
 func log(msg string, scope *gorm.Scope) {
 	ctx, ok := scope.Get("ctx")
-	if ok {
-		xlog.L(ctx.(context.Context)).Info(
-			msg,
-			zap.String("sql", scope.SQL),
-			zap.Reflect("value", scope.Value),
-		)
+	if !ok {
+		return
 	}
+	c, ok := ctx.(context.Context)
+	if !ok {
+		return
+	}
+	xlog.L(c).Info(
+		msg,
+		zap.String("sql", scope.SQL),
+		zap.Reflect("vars", scope.SQLVars),
+		zap.Reflect("result", scope.Value),
+	)
+}
+
+// updateTimeStampForCreateCallback will set `CreatedTime`, `UpdatedTime` when creating
+func updateTimeStampForCreateCallback(scope *gorm.Scope) {
+	if !scope.HasError() {
+		nowTime := time.Now().Unix()
+		if createTimeField, ok := scope.FieldByName(CreatedFiledName); ok {
+			if createTimeField.IsBlank {
+				err := createTimeField.Set(nowTime)
+				if err != nil {
+					log("set"+CreatedFiledName+"failed", scope)
+				}
+			}
+		}
+
+		if updatedField, ok := scope.FieldByName(UpdatedFiledName); ok {
+			if updatedField.IsBlank {
+				err := updatedField.Set(nowTime)
+				if err != nil {
+					log("set"+UpdatedFiledName+"failed", scope)
+				}
+			}
+		}
+	}
+}
+
+// updateTimeStampForUpdateCallback will set `ModifiedOn` when updating
+func updateTimeStampForUpdateCallback(scope *gorm.Scope) {
+	if _, ok := scope.Get("gorm:update_column"); !ok {
+		err := scope.SetColumn(UpdatedFiledName, time.Now().Unix())
+		if err != nil {
+			log("set"+UpdatedFiledName+"failed", scope)
+		}
+	}
+}
+
+// deleteCallback will set `DeletedOn` where deleting
+func deleteCallback(scope *gorm.Scope) {
+	if !scope.HasError() {
+		var extraOption string
+		if str, ok := scope.Get("gorm:delete_option"); ok {
+			extraOption = fmt.Sprint(str)
+		}
+
+		deletedField, hasDeletedField := scope.FieldByName(DeletedFiledName)
+
+		if !scope.Search.Unscoped && hasDeletedField {
+			scope.Raw(fmt.Sprintf(
+				"UPDATE %v SET %v=%v%v%v",
+				scope.QuotedTableName(),
+				scope.Quote(deletedField.DBName),
+				scope.AddToVars(time.Now().Unix()),
+				addExtraSpaceIfExist(scope.CombinedConditionSql()),
+				addExtraSpaceIfExist(extraOption),
+			)).Exec()
+		} else {
+			scope.Raw(fmt.Sprintf(
+				"DELETE FROM %v%v%v",
+				scope.QuotedTableName(),
+				addExtraSpaceIfExist(scope.CombinedConditionSql()),
+				addExtraSpaceIfExist(extraOption),
+			)).Exec()
+		}
+	}
+}
+
+// addExtraSpaceIfExist adds a separator
+func addExtraSpaceIfExist(str string) string {
+	if str != "" {
+		return " " + str
+	}
+	return ""
 }
