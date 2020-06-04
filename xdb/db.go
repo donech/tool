@@ -83,12 +83,12 @@ func log(msg string, scope *gorm.Scope) {
 // updateTimeStampForCreateCallback will set `CreatedTime`, `UpdatedTime` when creating
 func updateTimeStampForCreateCallback(scope *gorm.Scope) {
 	if !scope.HasError() {
-		nowTime := time.Now().Unix()
+		nowTime := time.Now()
 		if createTimeField, ok := scope.FieldByName(CreatedFiledName); ok {
 			if createTimeField.IsBlank {
 				err := createTimeField.Set(nowTime)
 				if err != nil {
-					log("set"+CreatedFiledName+"failed", scope)
+					log("set "+CreatedFiledName+" failed", scope)
 				}
 			}
 		}
@@ -97,7 +97,7 @@ func updateTimeStampForCreateCallback(scope *gorm.Scope) {
 			if updatedField.IsBlank {
 				err := updatedField.Set(nowTime)
 				if err != nil {
-					log("set"+UpdatedFiledName+"failed", scope)
+					log("set "+UpdatedFiledName+" failed", scope)
 				}
 			}
 		}
@@ -107,9 +107,9 @@ func updateTimeStampForCreateCallback(scope *gorm.Scope) {
 // updateTimeStampForUpdateCallback will set `ModifiedOn` when updating
 func updateTimeStampForUpdateCallback(scope *gorm.Scope) {
 	if _, ok := scope.Get("gorm:update_column"); !ok {
-		err := scope.SetColumn(UpdatedFiledName, time.Now().Unix())
+		err := scope.SetColumn(UpdatedFiledName, time.Now())
 		if err != nil {
-			log("set"+UpdatedFiledName+"failed", scope)
+			log("set "+UpdatedFiledName+" failed", scope)
 		}
 	}
 }
@@ -129,7 +129,7 @@ func deleteCallback(scope *gorm.Scope) {
 				"UPDATE %v SET %v=%v%v%v",
 				scope.QuotedTableName(),
 				scope.Quote(deletedField.DBName),
-				scope.AddToVars(time.Now().Unix()),
+				scope.AddToVars(time.Now()),
 				addExtraSpaceIfExist(scope.CombinedConditionSql()),
 				addExtraSpaceIfExist(extraOption),
 			)).Exec()
