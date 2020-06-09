@@ -6,7 +6,6 @@ package ginzap
 
 import (
 	"bytes"
-	"github.com/donech/tool/xtrace"
 	"net"
 	"net/http"
 	"net/http/httputil"
@@ -15,14 +14,17 @@ import (
 	"strings"
 	"time"
 
+	"github.com/donech/tool/xtrace"
+
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
 
 type bodyLogWriter struct {
 	gin.ResponseWriter
-	body *bytes.Buffer
-	mode string
+	body      *bytes.Buffer
+	mode      string
+	writeBody bool
 }
 
 func (w bodyLogWriter) Write(b []byte) (int, error) {
@@ -40,17 +42,17 @@ func (w bodyLogWriter) WriteString(s string) (int, error) {
 }
 
 func (w bodyLogWriter) needWriteBody() bool {
+	if w.writeBody {
+		return w.writeBody
+	}
 	if w.mode == gin.DebugMode {
-		return true
+		w.writeBody = true
 	}
 	contentType := w.Header().Get("Content-Type")
 	if strings.Contains(contentType, "application/json") {
-		return true
+		w.writeBody = true
 	}
-	if strings.Contains(contentType, "application/javascript") {
-		return true
-	}
-	return false
+	return w.writeBody
 }
 
 // GinZap returns a gin.HandlerFunc (middleware) that logs requests using uber-go/ginzap.
