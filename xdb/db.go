@@ -23,7 +23,7 @@ func Open(conf Config) (*gorm.DB, func()) {
 	if db, err := gorm.Open("mysql", conf.Dsn); err != nil {
 		panic(errors.WithStack(err))
 	} else {
-		db.LogMode(false)
+		db.LogMode(conf.LogMode)
 		db.DB().SetMaxIdleConns(conf.MaxIdle)
 		db.DB().SetMaxOpenConns(conf.MaxOpen)
 		db.DB().SetConnMaxLifetime(time.Duration(conf.MaxLifetime) * time.Second)
@@ -88,7 +88,7 @@ func updateTimeStampForCreateCallback(scope *gorm.Scope) {
 			if createTimeField.IsBlank {
 				err := createTimeField.Set(nowTime)
 				if err != nil {
-					log("set "+CreatedFiledName+" failed", scope)
+					log("set "+CreatedFiledName+" failed: "+err.Error(), scope)
 				}
 			}
 		}
@@ -97,7 +97,7 @@ func updateTimeStampForCreateCallback(scope *gorm.Scope) {
 			if updatedField.IsBlank {
 				err := updatedField.Set(nowTime)
 				if err != nil {
-					log("set "+UpdatedFiledName+" failed", scope)
+					log("set "+UpdatedFiledName+" failed: "+err.Error(), scope)
 				}
 			}
 		}
@@ -109,7 +109,7 @@ func updateTimeStampForUpdateCallback(scope *gorm.Scope) {
 	if _, ok := scope.Get("gorm:update_column"); !ok {
 		err := scope.SetColumn(UpdatedFiledName, time.Now())
 		if err != nil {
-			log("set "+UpdatedFiledName+" failed", scope)
+			log("set "+UpdatedFiledName+" failed: "+err.Error(), scope)
 		}
 	}
 }

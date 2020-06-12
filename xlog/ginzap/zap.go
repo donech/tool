@@ -20,6 +20,8 @@ import (
 	"go.uber.org/zap"
 )
 
+var connectionNum int64
+
 type bodyLogWriter struct {
 	gin.ResponseWriter
 	body      *bytes.Buffer
@@ -110,9 +112,9 @@ func GinZap(logger *zap.Logger, timeFormat string, utc bool, mod string) gin.Han
 		//		zap.String("body", string(body)),
 		//	)
 		//}
-
+		connectionNum++
 		c.Next()
-
+		connectionNum--
 		end := time.Now()
 		latency := end.Sub(start)
 		if utc {
@@ -198,4 +200,9 @@ func RecoveryWithZap(logger *zap.Logger, stack bool) gin.HandlerFunc {
 		}()
 		c.Next()
 	}
+}
+
+//GetConnectionNum http connectionNum
+func GetConnectionNum() int64 {
+	return connectionNum
 }

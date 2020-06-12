@@ -12,5 +12,6 @@ require (
 	github.com/pkg/errors v0.8.1
 	github.com/tinylib/msgp v1.1.2
 	github.com/uber/jaeger-client-go v2.23.1+incompatible
+	go.uber.org/atomic v1.6.0
 	go.uber.org/zap v1.15.0
 )
