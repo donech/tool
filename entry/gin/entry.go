@@ -32,6 +32,10 @@ type Entry struct {
 	srv    *http.Server
 }
 
+func (e *Entry) Engine() *gin.Engine {
+	return e.engine
+}
+
 func (e *Entry) Run() error {
 	srv := &http.Server{
 		Addr:    e.conf.Addr,
