@@ -6,6 +6,7 @@ package ginzap
 
 import (
 	"bytes"
+	"context"
 	"net"
 	"net/http"
 	"net/http/httputil"
@@ -79,13 +80,15 @@ func GinZap(logger *zap.Logger, timeFormat string, utc bool, mod string) gin.Han
 
 		// 注入 trace-id
 		traceID := xtrace.GetTraceIDFromHTTPHeader(header)
+		var ctx context.Context
 		if traceID == "" {
-			traceID = xtrace.NewTraceID()
-			c.Header(xtrace.KeyName, traceID)
+			ctx = xtrace.NewCtxWithTraceID(c.Request.Context())
+			traceID = xtrace.GetTraceIDFromContext(ctx)
+		} else {
+			ctx = context.WithValue(c.Request.Context(), xtrace.KeyName, traceID)
 		}
-		ctx := xtrace.NewCtxWithTraceID(c.Request.Context())
 		c.Request = c.Request.WithContext(ctx)
-
+		c.Header(xtrace.KeyName, traceID)
 		logger.Info("Request receive:",
 			zap.String(xtrace.KeyName, traceID),
 			zap.String("path", path),
