@@ -38,8 +38,9 @@ func Open(conf Config) (*gorm.DB, func()) {
 	}
 }
 
+// Trace return clone DB with trace ctx
 func Trace(ctx context.Context, db *gorm.DB) *gorm.DB {
-	return db.InstantSet("ctx", ctx)
+	return db.Set("ctx", ctx)
 }
 
 func RegisterCallback(db *gorm.DB) {
