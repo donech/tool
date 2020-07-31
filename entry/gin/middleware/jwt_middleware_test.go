@@ -1,0 +1,72 @@
+package middleware
+
+import (
+	"bytes"
+	"encoding/json"
+	"log"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
+	"github.com/donech/tool/xjwt"
+
+	"github.com/dgrijalva/jwt-go"
+
+	"github.com/gin-gonic/gin"
+)
+
+var factory = newJWTFactory()
+
+func newJWTFactory() xjwt.JWTFactory {
+	f, err := xjwt.NewJWTFactory(
+		xjwt.Config{
+			SingingAlgorithm: "HS256",
+			Key:              "12312asdasd",
+			PublicKeyFile:    "",
+			PrivateKeyFile:   "",
+			Timeout:          "10m",
+		},
+		xjwt.WithLoginFunc(login),
+	)
+	if err != nil {
+		log.Fatal("")
+	}
+	return f
+}
+
+func TestGenerateTokenHandler(t *testing.T) {
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request, _ = http.NewRequest("POST", "/getToken", bytes.NewBufferString(`{"username":"1111","password":"2222"}`))
+	c.Request.Header.Add("Content-Type", gin.MIMEJSON)
+	middleware := NewJWTMiddleware(WithFactory(factory), WithTokenLookup("header:auth"))
+	f := middleware.GenerateTokenHandler()
+	f(c)
+	resp := gin.H{}
+	err := json.Unmarshal(w.Body.Bytes(), &resp)
+	if err != nil {
+		t.Error("json.Unmarshal failed: ", err.Error())
+	}
+	if code := resp["code"]; code != float64(0) {
+		t.Fatal("get token api return fail, result is: ", w.Body.String())
+	}
+	t.Log("get token api return success, result is: ", w.Body.String())
+}
+
+func TestJWTMiddleware_MiddleWareImpl(t *testing.T) {
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request, _ = http.NewRequest("POST", "/getToken", bytes.NewBufferString(`{"username":"1111","password":"2222"}`))
+	c.Request.Header.Add("auth", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1OTYxOTI5OTksImlkIjoxLCJpZGVudGlmeSI6ImVycm9ycyIsInVzZXJuYW1lIjoiMTExMSJ9.gnlWo7ZlEY_7pe97-laxG-X9D5UwHiBqLCWcKP5IITc")
+	middleware := NewJWTMiddleware(WithFactory(factory), WithTokenLookup("header:auth"))
+	f := middleware.MiddleWareImpl()
+	f(c)
+	if w.Code == 401 {
+		log.Fatal("token is not valid", w.Body.String())
+	}
+	log.Println(c.Get("jwt"))
+}
+
+func login(form xjwt.LoginInForm) (jwt.MapClaims, error) {
+	return jwt.MapClaims{"username": form.Username, "id": 1, "identify": "errors"}, nil
+}

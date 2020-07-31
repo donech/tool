@@ -1,6 +1,6 @@
 //package ginzap provides xlog handling using ginzap package.
 // Code structure based on ginrus package.
-// Reference: github.com/gin-contrib/zap
+// Reference: github.com/xgin-contrib/zap
 
 package ginzap
 
@@ -58,7 +58,7 @@ func (w bodyLogWriter) needWriteBody() bool {
 	return w.writeBody
 }
 
-// GinZap returns a gin.HandlerFunc (middleware) that logs requests using uber-go/ginzap.
+// GinZap returns a xgin.HandlerFunc (middleware) that logs requests using uber-go/ginzap.
 //
 // Requests with errors are logged using ginzap.Error().
 // Requests without errors are logged using ginzap.Info().
