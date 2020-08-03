@@ -92,6 +92,10 @@ func NewJWTMiddleware(opts ...Option) JWTMiddleware {
 	if m.tokenName == "" {
 		m.tokenName = tokenName
 	}
+
+	if m.tokenLookup == "" {
+		m.tokenLookup = "header:" + m.tokenName
+	}
 	return m
 }
 

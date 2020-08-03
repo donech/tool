@@ -4,6 +4,7 @@ import (
 	"crypto/rsa"
 	"errors"
 	"io/ioutil"
+	"log"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -94,6 +95,9 @@ func (f *JWTFactory) Init() (err error) {
 		}
 		f.signKey = f.privateSignKey
 		f.decodeKey = f.publicSignKey
+	}
+	if f.loginFunc == nil {
+		log.Fatal("loginFunc can't be nil")
 	}
 	return err
 }
