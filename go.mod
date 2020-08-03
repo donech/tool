@@ -12,7 +12,6 @@ require (
 	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/natefinch/lumberjack v2.0.0+incompatible
 	github.com/pkg/errors v0.8.1
-	github.com/stretchr/testify v1.4.0
 	github.com/uber/jaeger-client-go v2.23.1+incompatible
 	go.uber.org/zap v1.15.0
 	golang.org/x/sys v0.0.0-20200323222414-85ca7c5b95cd // indirect

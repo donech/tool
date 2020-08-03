@@ -57,12 +57,12 @@ func TestJWTMiddleware_MiddleWareImpl(t *testing.T) {
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 	c.Request, _ = http.NewRequest("POST", "/getToken", bytes.NewBufferString(`{"username":"1111","password":"2222"}`))
-	c.Request.Header.Add("auth", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1OTYxOTI5OTksImlkIjoxLCJpZGVudGlmeSI6ImVycm9ycyIsInVzZXJuYW1lIjoiMTExMSJ9.gnlWo7ZlEY_7pe97-laxG-X9D5UwHiBqLCWcKP5IITc")
+	c.Request.Header.Add("auth", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1OTY0MTY4OTQsImlkIjoxLCJpZGVudGlmeSI6ImVycm9ycyIsInVzZXJuYW1lIjoiMTExMSJ9.7sGAYcSJqmZP-P-08N-GxiPGkBYlPk69KnRC0S-H4D4")
 	middleware := NewJWTMiddleware(WithFactory(factory), WithTokenLookup("header:auth"))
 	f := middleware.MiddleWareImpl()
 	f(c)
 	if w.Code == 401 {
-		log.Fatal("token is not valid", w.Body.String())
+		log.Fatal("token is not valid ", w.Body.String())
 	}
 	log.Println(c.Get("jwt"))
 }

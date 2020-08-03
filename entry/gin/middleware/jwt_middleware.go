@@ -10,9 +10,23 @@ import (
 
 var TokenNotFoundErr = errors.New("token not found err")
 
+var errCode = 1
+var tokenName = "token"
+
 type JWTMiddleware struct {
-	factory     xjwt.JWTFactory
-	tokenLookup string
+	factory            xjwt.JWTFactory
+	tokenLookup        string
+	responseHandler    ResponseHandler
+	errResponseHandler ResponseHandler
+	successCode        int
+	errorCode          int
+	tokenName          string
+}
+
+type ResponseHandler func(ctx *gin.Context, code int, msg string, data interface{})
+
+func DefaultResponseHandler(ctx *gin.Context, code int, msg string, data interface{}) {
+	ctx.JSON(200, gin.H{"code": code, "msg": msg, "data": data})
 }
 
 type Option func(middleware *JWTMiddleware)
@@ -29,10 +43,54 @@ func WithTokenLookup(tokenLookup string) Option {
 	}
 }
 
+func WithSuccessCode(code int) Option {
+	return func(m *JWTMiddleware) {
+		m.successCode = code
+	}
+}
+
+func WithErrorCode(code int) Option {
+	return func(m *JWTMiddleware) {
+		m.errorCode = code
+	}
+}
+
+func WithTokenName(name string) Option {
+	return func(m *JWTMiddleware) {
+		m.tokenName = name
+	}
+}
+
+func WithResponseHandler(handler ResponseHandler) Option {
+	return func(m *JWTMiddleware) {
+		m.responseHandler = handler
+	}
+}
+
+func WithErrResponseHandler(handler ResponseHandler) Option {
+	return func(m *JWTMiddleware) {
+		m.errResponseHandler = handler
+	}
+}
+
 func NewJWTMiddleware(opts ...Option) JWTMiddleware {
 	m := JWTMiddleware{}
 	for _, o := range opts {
 		o(&m)
+	}
+	if m.responseHandler == nil {
+		m.responseHandler = DefaultResponseHandler
+	}
+	if m.errResponseHandler == nil {
+		m.errResponseHandler = DefaultResponseHandler
+	}
+
+	if m.errorCode == 0 {
+		m.errorCode = errCode
+	}
+
+	if m.tokenName == "" {
+		m.tokenName = tokenName
 	}
 	return m
 }
@@ -42,15 +100,15 @@ func (j JWTMiddleware) GenerateTokenHandler() gin.HandlerFunc {
 		f := xjwt.LoginInForm{}
 		err := ctx.ShouldBind(&f)
 		if err != nil {
-			ctx.JSON(200, gin.H{"code": 1, "msg": err.Error()})
+			j.errResponseHandler(ctx, j.errorCode, err.Error(), nil)
 			return
 		}
 		token, err := j.factory.GenerateToken(f)
 		if err != nil {
-			ctx.JSON(200, gin.H{"code": 1, "msg": err.Error()})
+			j.errResponseHandler(ctx, j.errorCode, err.Error(), nil)
 			return
 		}
-		ctx.JSON(200, gin.H{"code": 0, "msg": "success", "token": token})
+		j.responseHandler(ctx, j.successCode, "success", gin.H{"token": token})
 	}
 }
 
