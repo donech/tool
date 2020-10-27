@@ -101,7 +101,7 @@ func NewJWTMiddleware(opts ...Option) JWTMiddleware {
 
 func (j JWTMiddleware) GenerateTokenHandler() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		f := xjwt.LoginInForm{}
+		f := xjwt.LoginForm{}
 		err := ctx.ShouldBind(&f)
 		if err != nil {
 			j.errResponseHandler(ctx, j.errorCode, err.Error(), nil)

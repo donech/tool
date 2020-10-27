@@ -67,6 +67,6 @@ func TestJWTMiddleware_MiddleWareImpl(t *testing.T) {
 	log.Println(c.Get("jwt"))
 }
 
-func login(form xjwt.LoginInForm) (jwt.MapClaims, error) {
+func login(form xjwt.LoginForm) (jwt.MapClaims, error) {
 	return jwt.MapClaims{"username": form.Username, "id": 1, "identify": "errors"}, nil
 }

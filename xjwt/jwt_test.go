@@ -20,7 +20,7 @@ func init() {
 }
 
 func TestJWTFactory_GenerateToken(t *testing.T) {
-	token, err := factory.GenerateToken(LoginInForm{
+	token, err := factory.GenerateToken(LoginForm{
 		Username: "12312",
 		Password: "123123",
 	})
@@ -47,6 +47,6 @@ func TestJWTFactory_GetPayload(t *testing.T) {
 	t.Log("get payload success: ", claims)
 }
 
-func login(form LoginInForm) (jwt.MapClaims, error) {
+func login(form LoginForm) (jwt.MapClaims, error) {
 	return jwt.MapClaims{"username": form.Username, "id": 1, "identify": "errors"}, nil
 }
