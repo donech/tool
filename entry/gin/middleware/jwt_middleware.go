@@ -1,10 +1,12 @@
 package middleware
 
 import (
+	"context"
 	"errors"
 	"strings"
 
 	"github.com/donech/tool/xjwt"
+	"github.com/donech/tool/xlog"
 	"github.com/gin-gonic/gin"
 )
 
@@ -128,7 +130,9 @@ func (j JWTMiddleware) MiddleWareImpl() gin.HandlerFunc {
 			ctx.AbortWithStatusJSON(401, gin.H{"msg": "get jwt-claims failed: " + err.Error()})
 			return
 		}
-		ctx.Set("jwt", claims)
+		c := context.WithValue(ctx.Request.Context(), xjwt.CtxJWTKey, claims)
+		ctx.Request = ctx.Request.WithContext(c)
+		xlog.S(ctx.Request.Context()).Infof("set claims to ctx, key=%#v, claims=%#v", xjwt.CtxJWTKey, claims)
 		ctx.Next()
 	}
 }

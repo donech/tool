@@ -13,6 +13,7 @@ import (
 
 var (
 	ErrNoPrivateKeyFile = errors.New("no private key err")
+	CtxJWTKey           = "jwt"
 )
 
 type LoginForm struct {
@@ -182,4 +183,12 @@ func (f *JWTFactory) useRsaAlgorithm() bool {
 		return true
 	}
 	return false
+}
+
+func GetClaimsFromCtx(ctx context.Context) jwt.MapClaims {
+	res := ctx.Value(CtxJWTKey)
+	if res == nil {
+		return jwt.MapClaims{}
+	}
+	return res.(jwt.MapClaims)
 }
