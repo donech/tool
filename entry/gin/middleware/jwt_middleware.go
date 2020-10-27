@@ -107,7 +107,7 @@ func (j JWTMiddleware) GenerateTokenHandler() gin.HandlerFunc {
 			j.errResponseHandler(ctx, j.errorCode, err.Error(), nil)
 			return
 		}
-		token, err := j.factory.GenerateToken(f)
+		token, err := j.factory.GenerateToken(ctx.Request.Context(), f)
 		if err != nil {
 			j.errResponseHandler(ctx, j.errorCode, err.Error(), nil)
 			return

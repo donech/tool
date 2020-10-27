@@ -1,6 +1,7 @@
 package xjwt
 
 import (
+	"context"
 	"crypto/rsa"
 	"errors"
 	"io/ioutil"
@@ -19,7 +20,7 @@ type LoginForm struct {
 	Password string `json:"password" form:"password" binding:"required"`
 }
 
-type LoginFunc func(LoginForm) (jwt.MapClaims, error)
+type LoginFunc func(ctx context.Context, form LoginForm) (jwt.MapClaims, error)
 type GenerateTokenFunc func(loginFunc LoginFunc) (jwt.Token, error)
 
 type JWTFactory struct {
@@ -128,12 +129,12 @@ func (f *JWTFactory) publicKey() error {
 	return nil
 }
 
-func (f JWTFactory) GenerateToken(form LoginForm) (string, error) {
-	claims, err := f.loginFunc(form)
-	claims["exp"] = time.Now().Add(f.timeout).Unix()
+func (f JWTFactory) GenerateToken(ctx context.Context, form LoginForm) (string, error) {
+	claims, err := f.loginFunc(ctx, form)
 	if err != nil {
 		return "", err
 	}
+	claims["exp"] = time.Now().Add(f.timeout).Unix()
 	token := jwt.NewWithClaims(jwt.GetSigningMethod(f.singingAlgorithm), claims)
 	s, err := token.SignedString(f.signKey)
 	if err != nil {
