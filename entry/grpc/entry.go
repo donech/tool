@@ -21,10 +21,11 @@ import (
 	"go.uber.org/zap"
 )
 
-func New(config Config, logger *zap.Logger, options ...Option) *Entry {
+func New(config Config, logger *zap.Logger, server RegisteServer) *Entry {
 	return &Entry{
-		config: config,
-		logger: logger,
+		config:        config,
+		logger:        logger,
+		registeServer: server,
 	}
 }
 
@@ -73,7 +74,7 @@ func (e *Entry) Run() error {
 		log.Printf("listen tcp error: %#v", err)
 		return err
 	}
-	xlog.S(context.Background()).Infof("listening tcp port: %d", e.config.Port)
+	xlog.S(context.Background()).Infof("listening tcp port: %s", e.config.Port)
 
 	go func() {
 		log.Println("start grpc server at ", e.config.Port)
