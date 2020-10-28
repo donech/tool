@@ -11,9 +11,10 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
-var (
-	ErrNoPrivateKeyFile = errors.New("no private key err")
-	CtxJWTKey           = "jwt"
+var ErrNoPrivateKeyFile = errors.New("no private key err")
+
+const (
+	CtxJWTKey = "jwt"
 )
 
 type LoginForm struct {

@@ -1,6 +1,7 @@
 package xjwt
 
 import (
+	"context"
 	"testing"
 
 	"github.com/dgrijalva/jwt-go"
@@ -20,7 +21,8 @@ func init() {
 }
 
 func TestJWTFactory_GenerateToken(t *testing.T) {
-	token, err := factory.GenerateToken(LoginForm{
+	ctx := context.Background()
+	token, err := factory.GenerateToken(ctx, LoginForm{
 		Username: "12312",
 		Password: "123123",
 	})
@@ -47,6 +49,6 @@ func TestJWTFactory_GetPayload(t *testing.T) {
 	t.Log("get payload success: ", claims)
 }
 
-func login(form LoginForm) (jwt.MapClaims, error) {
+func login(ctx context.Context, form LoginForm) (jwt.MapClaims, error) {
 	return jwt.MapClaims{"username": form.Username, "id": 1, "identify": "errors"}, nil
 }
