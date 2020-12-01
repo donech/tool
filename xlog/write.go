@@ -2,6 +2,7 @@ package xlog
 
 import (
 	"context"
+
 	"github.com/donech/tool/xtrace"
 
 	"go.uber.org/zap"
@@ -21,7 +22,7 @@ func L(ctx context.Context) *zap.Logger {
 func TraceIDField(ctx context.Context) zap.Field {
 	traceID := xtrace.GetTraceIDFromContext(ctx)
 	if traceID != "" {
-		return zap.String(xtrace.KeyName, traceID)
+		return zap.String(string(xtrace.KeyName), traceID)
 	}
 	return zap.Skip()
 }

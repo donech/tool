@@ -5,14 +5,13 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
-	"sync"
 	"time"
-
-	"github.com/uber/jaeger-client-go/utils"
 )
 
 //KeyName http stander header style
-const KeyName = "Trace-Id"
+const KeyName TraceKey = "Trace-Id"
+
+type TraceKey string
 
 var randomFuc func() uint64
 
@@ -35,17 +34,9 @@ func (o ID) IsValid() bool {
 }
 
 func init() {
-	seedGenerator := utils.NewRand(time.Now().UnixNano())
-	pool := sync.Pool{
-		New: func() interface{} {
-			return rand.NewSource(seedGenerator.Int63())
-		},
-	}
+	rand.Seed(time.Now().UnixNano())
 	randomFuc = func() uint64 {
-		generator := pool.Get().(rand.Source)
-		number := uint64(generator.Int63())
-		pool.Put(generator)
-		return number
+		return rand.Uint64()
 	}
 }
 
@@ -59,7 +50,7 @@ func NewTraceID() string {
 
 //GetTraceIDFromHTTPHeader GetTraceIDFromHTTPHeader
 func GetTraceIDFromHTTPHeader(header http.Header) string {
-	traceID := header.Get(KeyName)
+	traceID := header.Get(string(KeyName))
 	return traceID
 }
 

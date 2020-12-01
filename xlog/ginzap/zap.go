@@ -88,9 +88,9 @@ func GinZap(logger *zap.Logger, timeFormat string, utc bool, mod string) gin.Han
 			ctx = context.WithValue(c.Request.Context(), xtrace.KeyName, traceID)
 		}
 		c.Request = c.Request.WithContext(ctx)
-		c.Header(xtrace.KeyName, traceID)
+		c.Header(string(xtrace.KeyName), traceID)
 		logger.Info("Request receive:",
-			zap.String(xtrace.KeyName, traceID),
+			zap.String(string(xtrace.KeyName), traceID),
 			zap.String("path", path),
 			zap.String("method", c.Request.Method),
 			zap.Reflect("header", header),
@@ -133,7 +133,7 @@ func GinZap(logger *zap.Logger, timeFormat string, utc bool, mod string) gin.Han
 			responseBody := bodyLogWriter.body.String()
 			header = bodyLogWriter.Header()
 			logger.Info("Request response:：",
-				zap.String(xtrace.KeyName, traceID),
+				zap.String(string(xtrace.KeyName), traceID),
 				zap.String("path", path),
 				zap.String("method", c.Request.Method),
 				zap.Reflect("header", header),
@@ -172,7 +172,7 @@ func RecoveryWithZap(logger *zap.Logger, stack bool) gin.HandlerFunc {
 				httpRequest, _ := httputil.DumpRequest(c.Request, false)
 				if brokenPipe {
 					logger.Error(c.Request.URL.Path,
-						zap.String(xtrace.KeyName, traceID),
+						zap.String(string(xtrace.KeyName), traceID),
 						zap.Any("error", err),
 						zap.String("request", string(httpRequest)),
 					)
@@ -184,7 +184,7 @@ func RecoveryWithZap(logger *zap.Logger, stack bool) gin.HandlerFunc {
 
 				if stack {
 					logger.Error("[Recovery from panic]",
-						zap.String(xtrace.KeyName, traceID),
+						zap.String(string(xtrace.KeyName), traceID),
 						zap.Time("time", time.Now()),
 						zap.Any("error", err),
 						zap.String("request", string(httpRequest)),
@@ -192,7 +192,7 @@ func RecoveryWithZap(logger *zap.Logger, stack bool) gin.HandlerFunc {
 					)
 				} else {
 					logger.Error("[Recovery from panic]",
-						zap.String(xtrace.KeyName, traceID),
+						zap.String(string(xtrace.KeyName), traceID),
 						zap.Time("time", time.Now()),
 						zap.Any("error", err),
 						zap.String("request", string(httpRequest)),
@@ -201,6 +201,7 @@ func RecoveryWithZap(logger *zap.Logger, stack bool) gin.HandlerFunc {
 				c.AbortWithStatus(http.StatusInternalServerError)
 			}
 		}()
+
 		c.Next()
 	}
 }

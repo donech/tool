@@ -22,6 +22,7 @@ func (s *NirvanaInterceptor) Serve(ctx context.Context, req interface{}, info *g
 			err = err1
 		}
 	}()
+
 	var traceId string
 	// Read metadata from client.
 	md, ok := metadata.FromIncomingContext(ctx)
@@ -29,24 +30,28 @@ func (s *NirvanaInterceptor) Serve(ctx context.Context, req interface{}, info *g
 		// Create and send header.
 		traceId = xtrace.NewTraceID()
 		ctx = context.WithValue(ctx, xtrace.KeyName, traceId)
-		header := metadata.New(map[string]string{xtrace.KeyName: traceId})
+		header := metadata.New(map[string]string{string(xtrace.KeyName): traceId})
 		err = grpc.SendHeader(ctx, header)
 		if err != nil {
 			xlog.S(ctx).Errorf("grpc send header error %v", err)
 		}
 	} else {
-		if t, ok := md[xtrace.KeyName]; ok {
-			traceId = t[0]
+		if t, ok2 := md[string(xtrace.KeyName)]; ok2 {
+			if len(t) > 0 {
+				traceId = t[0]
+				xlog.S(ctx).Infof("grpc incoming header with trace id %s", traceId)
+			}
 		} else {
 			// Create and send header.
 			traceId = xtrace.NewTraceID()
 			ctx = context.WithValue(ctx, xtrace.KeyName, traceId)
-			header := metadata.New(map[string]string{xtrace.KeyName: traceId})
+			header := metadata.New(map[string]string{string(xtrace.KeyName): traceId})
 			err = grpc.SendHeader(ctx, header)
 			if err != nil {
 				xlog.S(ctx).Errorf("grpc send header error %v", err)
 			}
 		}
+
 	}
 	return handler(ctx, req)
 }

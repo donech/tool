@@ -4,6 +4,7 @@
 vendor
 *.DS_Store
 .idea
+*.log
 go.sum
 xlog/test.log
 xdb/test.log

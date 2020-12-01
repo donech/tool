@@ -14,8 +14,10 @@ import (
 var ErrNoPrivateKeyFile = errors.New("no private key err")
 
 const (
-	CtxJWTKey = "jwt"
+	CtxJWTKey KeyType = "jwt"
 )
+
+type KeyType string
 
 type LoginForm struct {
 	Username string `json:"username" form:"username" binding:"required"`
