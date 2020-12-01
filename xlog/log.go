@@ -21,18 +21,24 @@ func New(conf Config) (*zap.Logger, error) {
 		encoder = zapcore.NewConsoleEncoder(encoderConfig)
 	}
 
-	// 添加日志切割归档功能
-	hook := lumberjack.Logger{
-		Filename:   conf.File.Filename,   // 日志文件路径
-		MaxSize:    conf.File.MaxSize,    // 每个日志文件保存的最大尺寸 单位：M
-		MaxBackups: conf.File.MaxBackups, // 日志文件最多保存多少个备份
-		MaxAge:     conf.File.MaxAge,     // 文件最多保存多少天
-		Compress:   false,                // 是否压缩
+	writeSyncer := make([]zapcore.WriteSyncer, 0, 2)
+	writeSyncer = append(writeSyncer, zapcore.AddSync(os.Stderr))
+
+	if conf.File.Filename != "" {
+		// 添加日志切割归档功能
+		hook := lumberjack.Logger{
+			Filename:   conf.File.Filename,   // 日志文件路径
+			MaxSize:    conf.File.MaxSize,    // 每个日志文件保存的最大尺寸 单位：M
+			MaxBackups: conf.File.MaxBackups, // 日志文件最多保存多少个备份
+			MaxAge:     conf.File.MaxAge,     // 文件最多保存多少天
+			Compress:   false,                // 是否压缩
+		}
+		writeSyncer = append(writeSyncer, zapcore.AddSync(&hook))
 	}
 
 	core := zapcore.NewCore(
 		encoder, // 编码器配置
-		zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stderr), zapcore.AddSync(&hook)), // 打印到控制台和文件
+		zapcore.NewMultiWriteSyncer(writeSyncer...),
 		conf.level(), // 日志级别
 	)
 
