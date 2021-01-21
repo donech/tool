@@ -11,7 +11,12 @@ import (
 //New new a zap.Logger
 func New(conf Config) (*zap.Logger, error) {
 	encoderConfig := getEncoderConfig(conf)
-
+	if conf.ServiceName != "" {
+		SystemName = conf.ServiceName
+	}
+	if conf.SystemTraceName != "" {
+		SystemTraceName = conf.SystemTraceName
+	}
 	// 设置日志输出格式
 	var encoder zapcore.Encoder
 	switch conf.Format {
