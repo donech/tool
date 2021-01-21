@@ -1,15 +1,14 @@
-package grpc
+package xgrpc
 
 import (
 	"context"
-	"log"
 	"net"
 
 	"github.com/donech/tool/xlog"
 
 	"google.golang.org/grpc/reflection"
 
-	"github.com/donech/tool/entry/grpc/interceptor"
+	"github.com/donech/tool/entry/xgrpc/interceptor"
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpcopentracing "github.com/grpc-ecosystem/go-grpc-middleware/tracing/opentracing"
@@ -17,16 +16,16 @@ import (
 	"github.com/opentracing/opentracing-go"
 
 	"google.golang.org/grpc"
-
-	"go.uber.org/zap"
 )
 
-func New(config Config, logger *zap.Logger, server RegisteServer) *Entry {
-	return &Entry{
-		config:        config,
-		logger:        logger,
-		registeServer: server,
+func New(config Config, options ...Option) *Entry {
+	en := &Entry{
+		config: config,
 	}
+	for _, option := range options {
+		option(en)
+	}
+	return en
 }
 
 type Option func(entry *Entry)
@@ -48,38 +47,39 @@ type RegisteWebHandler func(ctx context.Context, mux *runtime.ServeMux, conn *gr
 
 type Entry struct {
 	config            Config
-	logger            *zap.Logger
 	srv               *grpc.Server
 	registeServer     RegisteServer
 	registeWebHandler RegisteWebHandler
 }
 
 func (e *Entry) Run() error {
-	nirvana := interceptor.NirvanaInterceptor{}
+	traceIdInterceptor := interceptor.TraceIdInterceptor{}
+	logInterceptor := interceptor.LogInterceptor{}
 	srv := grpc.NewServer(
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+			traceIdInterceptor.Serve,
 			grpcopentracing.UnaryServerInterceptor(grpcopentracing.WithTracer(opentracing.GlobalTracer())),
-			nirvana.Serve,
+			logInterceptor.Serve,
 		)))
 	if e.registeServer != nil {
 		e.registeServer(srv)
 		e.srv = srv
 	}
 	if e.config.EnableReflect {
-		log.Print("enable grpc reflect")
+		xlog.SS().Info("enable grpc reflect")
 		reflection.Register(srv)
 	}
 	listen, err := net.Listen("tcp", e.config.Port)
 	if err != nil {
-		log.Printf("listen tcp error: %#v", err)
+		xlog.SS().Errorf("listen tcp error: %s", err)
 		return err
 	}
-	xlog.S(context.Background()).Infof("listening tcp port: %s", e.config.Port)
+	xlog.SS().Infof("listening tcp port: %s", e.config.Port)
 
 	go func() {
-		log.Println("start grpc server at ", e.config.Port)
+		xlog.SS().Info("start grpc server at ", e.config.Port)
 		if err = srv.Serve(listen); err != nil {
-			log.Fatalf("grpc serve listen error: %#v", err)
+			xlog.SS().Fatalf("grpc serve listen error: %s", err)
 		}
 	}()
 	return nil

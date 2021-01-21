@@ -1,4 +1,4 @@
-package grpc
+package xgrpc
 
 type Config struct {
 	Addr          string `yaml:"addr"`

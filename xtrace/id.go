@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
+	"strings"
 	"time"
+
+	"google.golang.org/grpc/metadata"
 )
 
 //KeyName http stander header style
@@ -61,6 +64,22 @@ func GetTraceIDFromContext(ctx context.Context) string {
 		return ""
 	}
 	return traceID.(string)
+}
+
+//GetTraceIDFromGrpcMetadata GetTraceIDFromGrpcMetadata case insensitive
+func GetTraceIDFromGrpcMetadata(md metadata.MD) string {
+	if t, ok := md[string(KeyName)]; ok {
+		if len(t) > 0 {
+			return t[0]
+		}
+	}
+
+	if t, ok := md[strings.ToLower(string(KeyName))]; ok {
+		if len(t) > 0 {
+			return t[0]
+		}
+	}
+	return ""
 }
 
 //NewCtxWithTraceID NewCtxWithTraceID

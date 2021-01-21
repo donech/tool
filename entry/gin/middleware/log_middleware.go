@@ -2,7 +2,7 @@
 // Code structure based on ginrus package.
 // Reference: github.com/xgin-contrib/zap
 
-package ginzap
+package middleware
 
 import (
 	"bytes"
@@ -14,6 +14,8 @@ import (
 	"runtime/debug"
 	"strings"
 	"time"
+
+	"github.com/donech/tool/xlog"
 
 	"github.com/donech/tool/xtrace"
 
@@ -67,12 +69,11 @@ func (w bodyLogWriter) needWriteBody() bool {
 //   1. A time package format string (e.g. time.RFC3339).
 //   2. A boolean stating whether to use UTC time zone or local.
 //   3. A string stating whether to xlog response body
-func GinZap(logger *zap.Logger, timeFormat string, utc bool, mod string) gin.HandlerFunc {
+func GinZap(timeFormat string, utc bool, mod string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
 		bodyLogWriter := &bodyLogWriter{body: bytes.NewBufferString(""), ResponseWriter: c.Writer, mode: mod}
 		c.Writer = bodyLogWriter
-
 		// some evil middlewares modify this values
 		path := c.Request.URL.Path
 		query := c.Request.URL.RawQuery
@@ -89,7 +90,7 @@ func GinZap(logger *zap.Logger, timeFormat string, utc bool, mod string) gin.Han
 		}
 		c.Request = c.Request.WithContext(ctx)
 		c.Header(string(xtrace.KeyName), traceID)
-		logger.Info("Request receive:",
+		xlog.L(ctx).Info("Request receive:",
 			zap.String(string(xtrace.KeyName), traceID),
 			zap.String("path", path),
 			zap.String("method", c.Request.Method),
@@ -127,12 +128,12 @@ func GinZap(logger *zap.Logger, timeFormat string, utc bool, mod string) gin.Han
 		if len(c.Errors) > 0 {
 			// Append error field if this is an erroneous request.
 			for _, e := range c.Errors.Errors() {
-				logger.Error(e)
+				xlog.L(ctx).Error(e)
 			}
 		} else {
 			responseBody := bodyLogWriter.body.String()
 			header = bodyLogWriter.Header()
-			logger.Info("Request response:：",
+			xlog.L(ctx).Info("Request response:：",
 				zap.String(string(xtrace.KeyName), traceID),
 				zap.String("path", path),
 				zap.String("method", c.Request.Method),
@@ -152,7 +153,7 @@ func GinZap(logger *zap.Logger, timeFormat string, utc bool, mod string) gin.Han
 // All errors are logged using ginzap.Error().
 // stack means whether output the stack info.
 // The stack info is easy to find where the error occurs but the stack info is too large.
-func RecoveryWithZap(logger *zap.Logger, stack bool) gin.HandlerFunc {
+func RecoveryWithZap(stack bool) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {
 			traceID := xtrace.GetTraceIDFromHTTPHeader(c.Writer.Header())
@@ -171,7 +172,7 @@ func RecoveryWithZap(logger *zap.Logger, stack bool) gin.HandlerFunc {
 
 				httpRequest, _ := httputil.DumpRequest(c.Request, false)
 				if brokenPipe {
-					logger.Error(c.Request.URL.Path,
+					xlog.L(c.Request.Context()).Error(c.Request.URL.Path,
 						zap.String(string(xtrace.KeyName), traceID),
 						zap.Any("error", err),
 						zap.String("request", string(httpRequest)),
@@ -183,7 +184,7 @@ func RecoveryWithZap(logger *zap.Logger, stack bool) gin.HandlerFunc {
 				}
 
 				if stack {
-					logger.Error("[Recovery from panic]",
+					xlog.L(c.Request.Context()).Error("[Recovery from panic]",
 						zap.String(string(xtrace.KeyName), traceID),
 						zap.Time("time", time.Now()),
 						zap.Any("error", err),
@@ -191,7 +192,7 @@ func RecoveryWithZap(logger *zap.Logger, stack bool) gin.HandlerFunc {
 						zap.String("stack", string(debug.Stack())),
 					)
 				} else {
-					logger.Error("[Recovery from panic]",
+					xlog.L(c.Request.Context()).Error("[Recovery from panic]",
 						zap.String(string(xtrace.KeyName), traceID),
 						zap.Time("time", time.Now()),
 						zap.Any("error", err),

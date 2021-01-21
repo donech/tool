@@ -6,7 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/donech/tool/xlog/ginzap"
+	"github.com/donech/tool/entry/gin/middleware"
+
 	"go.uber.org/zap"
 
 	"github.com/gin-gonic/gin"
@@ -14,8 +15,8 @@ import (
 
 func NewEntry(conf *Config, router Router, logger *zap.Logger) *Entry {
 	engine := gin.New()
-	engine.Use(ginzap.GinZap(zap.L(), time.RFC3339, true, conf.Mod))
-	engine.Use(ginzap.RecoveryWithZap(zap.L(), true))
+	engine.Use(middleware.GinZap(time.RFC3339, true, conf.Mod))
+	engine.Use(middleware.RecoveryWithZap(zap.L(), true))
 	return &Entry{
 		conf:   conf,
 		engine: engine,
