@@ -18,6 +18,11 @@ var CreatedFiledName = "created_time"
 var UpdatedFiledName = "updated_time"
 var DeletedFiledName = "deleted_time"
 
+//New just like Open
+func New(cfg Config) (*gorm.DB, func()) {
+	return Open(cfg)
+}
+
 //Open the database connection
 func Open(conf Config) (*gorm.DB, func()) {
 	if db, err := gorm.Open("mysql", conf.Dsn); err != nil {

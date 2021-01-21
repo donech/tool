@@ -2,8 +2,10 @@ package xredis
 
 import "github.com/go-redis/redis"
 
-func New(config Config) *redis.Client {
+func New(cfg Config) *redis.Client {
 	return redis.NewClient(&redis.Options{
-		Addr: config.Addr,
+		Addr:     cfg.Addr,
+		Password: cfg.Password,
+		DB:       cfg.DB,
 	})
 }
