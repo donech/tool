@@ -16,7 +16,7 @@ import (
 func NewEntry(conf *Config, router Router, logger *zap.Logger) *Entry {
 	engine := gin.New()
 	engine.Use(middleware.GinZap(time.RFC3339, true, conf.Mod))
-	engine.Use(middleware.RecoveryWithZap(zap.L(), true))
+	engine.Use(middleware.RecoveryWithZap(true))
 	return &Entry{
 		conf:   conf,
 		engine: engine,

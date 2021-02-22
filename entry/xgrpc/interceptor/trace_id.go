@@ -3,6 +3,8 @@ package interceptor
 import (
 	"context"
 
+	"github.com/pkg/errors"
+
 	"github.com/donech/tool/xtrace"
 
 	"github.com/donech/tool/xlog"
@@ -17,7 +19,7 @@ func (s *TraceIdInterceptor) Serve(ctx context.Context, req interface{}, info *g
 	defer func() {
 		err1, ok := recover().(error)
 		if ok {
-			xlog.S(ctx).Errorf("get panic error %v", err1)
+			xlog.S(ctx).Errorf("get panic error %+v", errors.WithStack(err1))
 			err = err1
 		}
 	}()
