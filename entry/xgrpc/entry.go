@@ -4,6 +4,7 @@ import (
 	"context"
 	"net"
 
+	"github.com/donech/tool/xjwt"
 	"github.com/donech/tool/xlog"
 
 	"google.golang.org/grpc/reflection"
@@ -42,6 +43,12 @@ func WithRegisteWebHandler(handler RegisteWebHandler) Option {
 	}
 }
 
+func WithJwtFactory(jwtFactory *xjwt.JWTFactory) Option {
+	return func(entry *Entry) {
+		entry.jwtFactory = jwtFactory
+	}
+}
+
 type RegisteServer func(server *grpc.Server)
 type RegisteWebHandler func(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error
 
@@ -50,16 +57,19 @@ type Entry struct {
 	srv               *grpc.Server
 	registeServer     RegisteServer
 	registeWebHandler RegisteWebHandler
+	jwtFactory        *xjwt.JWTFactory
 }
 
 func (e *Entry) Run() error {
 	traceIdInterceptor := interceptor.TraceIdInterceptor{}
 	logInterceptor := interceptor.LogInterceptor{}
+	JwtInterceptor := interceptor.NewJwtInterceptor(e.jwtFactory)
 	srv := grpc.NewServer(
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
 			traceIdInterceptor.Serve,
 			grpcopentracing.UnaryServerInterceptor(grpcopentracing.WithTracer(opentracing.GlobalTracer())),
 			logInterceptor.Serve,
+			JwtInterceptor.Serve,
 		)))
 	if e.registeServer != nil {
 		e.registeServer(srv)

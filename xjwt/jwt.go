@@ -195,3 +195,7 @@ func GetClaimsFromCtx(ctx context.Context) jwt.MapClaims {
 	}
 	return res.(jwt.MapClaims)
 }
+
+func SetClaimsToCtx(ctx context.Context, claims jwt.MapClaims) context.Context {
+	return context.WithValue(ctx, CtxJWTKey, claims)
+}

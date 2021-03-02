@@ -12,7 +12,10 @@ import (
 func AesEncryptCBC(origData []byte, key []byte) (encrypted []byte) {
 	// 分组秘钥
 	// NewCipher该函数限制了输入k的长度必须为16, 24或者32
-	block, _ := aes.NewCipher(key)
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		panic("AesEncryptCBC error: " + err.Error())
+	}
 	blockSize := block.BlockSize()                              // 获取秘钥块的长度
 	origData = pkcs5Padding(origData, blockSize)                // 补全码
 	blockMode := cipher.NewCBCEncrypter(block, key[:blockSize]) // 加密模式
