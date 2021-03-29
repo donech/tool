@@ -49,6 +49,12 @@ func WithJwtFactory(jwtFactory *xjwt.JWTFactory) Option {
 	}
 }
 
+func WithJumpMethods(jumps map[string]bool) Option {
+	return func(entry *Entry) {
+		entry.jumpMethods = jumps
+	}
+}
+
 type RegisteServer func(server *grpc.Server)
 type RegisteWebHandler func(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error
 
@@ -58,12 +64,13 @@ type Entry struct {
 	registeServer     RegisteServer
 	registeWebHandler RegisteWebHandler
 	jwtFactory        *xjwt.JWTFactory
+	jumpMethods       map[string]bool
 }
 
 func (e *Entry) Run() error {
 	traceIdInterceptor := interceptor.TraceIdInterceptor{}
 	logInterceptor := interceptor.LogInterceptor{}
-	JwtInterceptor := interceptor.NewJwtInterceptor(e.jwtFactory)
+	JwtInterceptor := interceptor.NewJwtInterceptor(e.jwtFactory, e.jumpMethods)
 	srv := grpc.NewServer(
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
 			traceIdInterceptor.Serve,
