@@ -26,6 +26,8 @@ func NewTable(db *gorm.DB, cursorKey string, pager Pager) *table {
 	}
 }
 
+//Build 会比 t.PageSize 多查出一条数据，用来判断是否还有下一页数据
+//调用方需要做此判断
 func (t table) Build() (res *gorm.DB) {
 	res = t.db
 	if t.PageNum == 0 {
@@ -34,13 +36,17 @@ func (t table) Build() (res *gorm.DB) {
 		return res
 	}
 	offset := t.PageSize * (t.PageNum - 1)
-	return res.Offset(offset).Limit(t.PageSize)
+	//t.PageSize + 1 多查出一条用来判断是否还有下一页数据
+	//调用方需要做此判断
+	return res.Offset(offset).Limit(t.PageSize + 1)
 }
 
 func EmptyDBFuc(db *gorm.DB) *gorm.DB {
 	return db
 }
 
-func (t table) FindAll(doer func(db *gorm.DB) *gorm.DB) error {
+//Do 会比 t.PageSize 多查出一条数据，用来判断是否还有下一页数据
+//调用方需要做此判断
+func (t table) Do(doer func(db *gorm.DB) *gorm.DB) error {
 	return doer(t.Build()).Error
 }
