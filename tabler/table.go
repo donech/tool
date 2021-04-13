@@ -1,6 +1,8 @@
 package tabler
 
 import (
+	"fmt"
+
 	"github.com/jinzhu/gorm"
 )
 
@@ -27,7 +29,7 @@ func NewTable(db *gorm.DB, cursorKey string, pager Pager) *table {
 func (t table) Build() (res *gorm.DB) {
 	res = t.db
 	if t.PageNum == 0 {
-		res = t.db.Where("? < ?", t.cursorKey, t.Cursor)
+		res = t.db.Where(fmt.Sprintf("%s < ?", t.cursorKey), t.Cursor)
 		res = res.Limit(t.PageSize)
 		return res
 	}
