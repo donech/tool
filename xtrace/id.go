@@ -12,7 +12,7 @@ import (
 )
 
 //KeyName http stander header style
-const KeyName TraceKey = "Trace-Id"
+const KeyName TraceKey = "X-Request-ID"
 
 type TraceKey string
 
