@@ -19,10 +19,8 @@ type Config struct {
 	EncodeKey EncodeKeyConfig `yaml:"encodeKey"`
 	//SentryDSN Sentry 的 DSN地址，如果配置了此参数，warn 级别以上的错误会发送sentry
 	SentryDSN string `yaml:"sentryDSN"`
-	//SystemName 系统名称
-	SystemName string `yaml:"systemName"`
-	//SystemTraceName 系统日志（非业务相关） traceID 对应的值
-	SystemTraceName string `yaml:"systemTraceName"`
+	//InternalTraceId 系统日志（非业务相关） traceID 对应的值
+	InternalTraceId string `yaml:"internalTraceId"`
 }
 
 //level 获取日志级别，默认是Info

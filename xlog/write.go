@@ -8,28 +8,28 @@ import (
 	"go.uber.org/zap"
 )
 
-var SystemKey = "system"
-var SystemName = "system"
-var SystemTraceName = "system"
+var serviceKey = "service"
+var serviceName = "service"
+var internalTraceId = "internal"
 
 //S SugaredLogger with xtrace-id field
 func S(ctx context.Context) *zap.SugaredLogger {
-	return zap.S().With(TraceIDField(ctx), SystemTraceIDField())
+	return zap.S().With(TraceIDField(ctx), ServiceField())
 }
 
 //Logger with xtrace-id field
 func L(ctx context.Context) *zap.Logger {
-	return zap.L().With(TraceIDField(ctx), SystemTraceIDField())
+	return zap.L().With(TraceIDField(ctx), ServiceField())
 }
 
 //SS SugaredLogger with traceID = system
 func SS() *zap.SugaredLogger {
-	return zap.S().With(zap.String(string(xtrace.KeyName), SystemName), SystemTraceIDField())
+	return zap.S().With(zap.String(string(xtrace.KeyName), internalTraceId), ServiceField())
 }
 
 //Logger with with traceID = system
 func SL() *zap.Logger {
-	return zap.L().With(zap.String(string(xtrace.KeyName), SystemName), SystemTraceIDField())
+	return zap.L().With(zap.String(string(xtrace.KeyName), internalTraceId), ServiceField())
 }
 
 //TraceIDField TraceIDField
@@ -41,7 +41,7 @@ func TraceIDField(ctx context.Context) zap.Field {
 	return zap.Skip()
 }
 
-//SystemTraceIDField SystemTraceIDField
-func SystemTraceIDField() zap.Field {
-	return zap.String(SystemKey, SystemTraceName)
+//ServiceField ServiceField
+func ServiceField() zap.Field {
+	return zap.String(serviceKey, serviceName)
 }
