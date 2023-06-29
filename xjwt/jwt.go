@@ -69,12 +69,12 @@ func WithLoginFunc(f LoginFunc) Option {
 	}
 }
 
-func NewJWTFactory(config Config, opts ...Option) (JWTFactory, error) {
+func NewJWTFactory(config Config, opts ...Option) (*JWTFactory, error) {
 	d, err := time.ParseDuration(config.Timeout)
 	if err != nil {
 		d = time.Minute * 10
 	}
-	jm := JWTFactory{
+	jm := &JWTFactory{
 		singingAlgorithm: config.SingingAlgorithm,
 		key:              []byte(config.Key),
 		publicKeyFile:    config.PublicKeyFile,
@@ -82,7 +82,7 @@ func NewJWTFactory(config Config, opts ...Option) (JWTFactory, error) {
 		timeout:          d,
 	}
 	for _, v := range opts {
-		v(&jm)
+		v(jm)
 	}
 	err = jm.Init()
 	return jm, err

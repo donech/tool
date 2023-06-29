@@ -17,16 +17,18 @@ type CUDTime struct{ mixin.Schema }
 func (CUDTime) Fields() []ent.Field {
 	return []ent.Field{
 		field.Time("created_time").Default(time.Now).Immutable().SchemaType(map[string]string{
-			dialect.MySQL: "datetime DEFAULT CURRENT_TIMESTAMP",
+			dialect.MySQL: "datetime(6) DEFAULT CURRENT_TIMESTAMP",
 		}).Annotations(
 			entproto.Field(101),
 		),
 		field.Time("updated_time").Default(time.Now).UpdateDefault(time.Now).SchemaType(map[string]string{
-			dialect.MySQL: "datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-		}).Immutable().Annotations(
+			dialect.MySQL: "datetime(6) DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
+		}).Annotations(
 			entproto.Field(102),
 		),
-		field.Time("deleted_time").Optional().Nillable().Annotations(
+		field.Time("deleted_time").Optional().Nillable().SchemaType(map[string]string{
+			dialect.MySQL: "datetime(6) DEFAULT null",
+		}).Annotations(
 			entproto.Field(103),
 		),
 	}
